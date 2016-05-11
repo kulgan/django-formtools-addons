@@ -1,6 +1,6 @@
-================
-formtools-addons
-================
+=======================
+django-formtools-addons
+=======================
 
 .. image:: https://badge.fury.io/py/django-formtools-addons.png
     :target: https://badge.fury.io/py/django-formtools-addons
@@ -9,6 +9,11 @@ formtools-addons
     :target: https://travis-ci.org/dirkmoors/django-formtools-addons
 
 'Addons for Django Formtools'
+
+Features
+--------
+
+* Add multiple forms to a single WizardView step (MultipleFormWizardView and subclasses)
 
 Quickstart
 ----------
@@ -24,8 +29,8 @@ Then use it in a project::
                                   NamedUrlSessionMultipleFormWizardView, NamedUrlCookieMultipleFormWizardView,
                                   MultipleFormWizardView, NamedUrlMultipleFormWizardView)
 
-Example use
------------
+MultipleFormWizardView: Example use
+-----------------------------------
 
 .. code-block:: python
 
@@ -82,10 +87,6 @@ Example use
         },
     })
 
-Features
---------
-
-* TODO
 
 Running Tests
 --------------
