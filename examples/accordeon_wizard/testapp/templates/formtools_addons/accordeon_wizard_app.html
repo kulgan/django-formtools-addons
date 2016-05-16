@@ -1,0 +1,16 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Title</title>
+
+        <script src="https://code.jquery.com/jquery-1.12.3.js" type="text/javascript"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.2.28/angular.js" type="text/javascript"></script>
+
+    </head>
+    <body ng-app="formtools_addons.WizardApp" data-staticroot="{% static '' %}">
+        <div wizard></div>
+        <script src="{% static 'formtools_addons/js/wizardapi.js' %}" type="text/javascript"></script>
+    </body>
+</html>

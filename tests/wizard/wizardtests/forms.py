@@ -11,7 +11,6 @@ from django.template import Template, Context
 
 from formtools.wizard.views import WizardView
 
-
 temp_storage_location = tempfile.mkdtemp(dir=os.environ.get('DJANGO_TEST_TEMP_DIR'))
 temp_storage = FileSystemStorage(location=temp_storage_location)
 

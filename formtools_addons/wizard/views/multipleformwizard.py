@@ -15,7 +15,7 @@ from formtools.wizard.views import ManagementForm, WizardView as BaseWizardView
 
 
 class MultipleFormWizardView(BaseWizardView):
-    template_name = 'multipleformwizard/wizard_form.html'
+    template_name = 'formtools_addons/wizard/wizard_form.html'
     cleaned_data_in_context = False
     _form_list_factory = None
 
