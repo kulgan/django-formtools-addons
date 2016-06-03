@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 import uuid
 import json
 import hashlib
+from datetime import datetime
 from collections import OrderedDict
 
 import six
@@ -13,11 +14,20 @@ from formtools.wizard.storage.exceptions import NoFileStorageConfigured
 from formtools.wizard.views import NamedUrlWizardView
 
 
+def default_json_serializer(obj):
+    """JSON serializer for objects not serializable by default json code"""
+    if isinstance(obj, datetime):
+        serialized = obj.isoformat()
+        return serialized
+    raise TypeError("Type not serializable")
+
+
 class WizardAPIView(NamedUrlWizardView):
     data_step_name = None
     new_step_name = None
     commit_step_name = None
     substep_separator = None
+    json_serializer = None
 
     @classmethod
     def get_initkwargs(cls, form_list=None, initial_dict=None,
@@ -52,6 +62,9 @@ class WizardAPIView(NamedUrlWizardView):
                                                          getattr(cls, 'instance_dict', None)) or {},
             'condition_dict': condition_dict or kwargs.pop('condition_dict',
                                                            getattr(cls, 'condition_dict', None)) or {},
+            'json_serializer': condition_dict or kwargs.pop('json_serializer',
+                                                            getattr(cls, 'json_serializer',
+                                                                    default_json_serializer)) or {},
             'data_step_name': kwargs.pop('data_step_name', 'data'),
             'commit_step_name': kwargs.pop('data_step_name', 'commit'),
             'substep_separator': kwargs.pop('substep_separator', '|'),
@@ -208,7 +221,7 @@ class WizardAPIView(NamedUrlWizardView):
     def render_preview(self, step, form):
         if form.is_bound and form.is_valid():
             data = form.cleaned_data
-            return '<p>STEP: %s, DATA: %s</p>' % (step, json.dumps(data))
+            return '<p>STEP: %s, DATA: %s</p>' % (step, json.dumps(data, default=self.json_serializer))
         return None
 
     def render_state(self, current_step, form=None, status_code=200):
