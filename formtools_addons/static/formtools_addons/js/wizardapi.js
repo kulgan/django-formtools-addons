@@ -7,6 +7,17 @@
     var wizard_root = $('body').data('wizardroot') || '/wizard/';
     var substep_separator = '|';
 
+    var getWizardUrl = function(path, endSlash){
+        endSlash = endSlash || true;
+
+        var result = wizard_root + path;
+        if(endSlash && result.slice(-1) != '/'){
+            result += '/';
+        }
+
+        return result;
+    };
+
     var parseStepName = function(stepName){
         /*
         Function to parse the current step (and substep if applicable)
@@ -137,10 +148,7 @@
         return {
             link: function($scope, elem, attrs){
                 $scope.refresh = function(){
-                    var promise = $http({
-                        method: 'GET',
-                        url: wizard_root + 'data/'
-                    });
+                    var promise = $http.get(getWizardUrl('data'));
                     promise.success(function(data){
                         $scope.handle_new_data(data);
                     }).error(function(){
@@ -164,11 +172,7 @@
 
                     var fullStepName = $scope.data.current_step.fullStep;
 
-                    var promise = $http({
-                        method: 'POST',
-                        url: wizard_root + fullStepName + '/',
-                        data: form_data
-                    });
+                    var promise = $http.post(getWizardUrl(fullStepName), form_data);
                     promise.success(function(data){
                         $scope.handle_new_data(data);
                     });
@@ -191,10 +195,7 @@
                 };
 
                 $scope.handle_done = function(data){
-                    var promise = $http({
-                        method: 'POST',
-                        url: wizard_root + 'commit/'
-                    });
+                    var promise = $http.post(getWizardUrl('commit'));
                     promise.success(function(data){
                         console.log(data);
                         var next_url = data.next_url;
