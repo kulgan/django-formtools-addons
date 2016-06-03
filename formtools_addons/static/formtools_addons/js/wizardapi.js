@@ -122,7 +122,7 @@
         return o;
     };
 
-    var app = angular.module('formtools_addons.WizardApp', []);
+    var app = angular.module('formtools_addons.WizardApp', ['ngCookies']);
 
     app.config(['$httpProvider', function($httpProvider){
         $httpProvider.defaults.xsrfCookieName = 'csrftoken';
