@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 import uuid
 import json
 import hashlib
-from datetime import datetime
+from datetime import datetime, date
 from collections import OrderedDict
 
 import six
@@ -16,7 +16,7 @@ from formtools.wizard.views import NamedUrlWizardView
 
 def default_json_serializer(obj):
     """JSON serializer for objects not serializable by default json code"""
-    if isinstance(obj, datetime):
+    if isinstance(obj, (datetime, date)):
         serialized = obj.isoformat()
         return serialized
     raise TypeError("Type not serializable")
