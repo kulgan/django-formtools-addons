@@ -18,20 +18,23 @@ class WizardAPITests(TestCase):
     ####################################################################################################################
     # Regular wizard, index based
     ####################################################################################################################
+    def setUp(self):
+        self.header = {'CONTENT_TYPE': 'application/txt'}
+
     def test_get_wizard_without_step(self):
-        response = self.client.get(reverse('wizard'))
+        response = self.client.get(reverse('wizard'), **self.header)
         assert response.status_code == 200
         assert self._get_response_data(response)['current_step'] == '0'
 
     def test_get_wizard_data_step(self):
-        response = self.client.get(reverse('wizard_step', kwargs={'step': 'data'}))
+        response = self.client.get(reverse('wizard_step', kwargs={'step': 'data'}), **self.header)
         assert response.status_code == 200
 
         data = self._get_response_data(response)
         assert data['structure'] == ['0', '1']
 
     def test_get_wizard_with_step(self):
-        response = self.client.get(reverse('wizard_step', kwargs={'step': '1'}))
+        response = self.client.get(reverse('wizard_step', kwargs={'step': '1'}), **self.header)
         assert response.status_code == 200
         assert self._get_response_data(response)['current_step'] == '1'
 
@@ -77,7 +80,7 @@ class WizardAPITests(TestCase):
         assert data['steps']['1']['valid'] is True
 
         # Fetch data
-        response = self.client.get(reverse('wizard_step', kwargs={'step': 'data'}), {})
+        response = self.client.get(reverse('wizard_step', kwargs={'step': 'data'}), {}, **self.header)
         assert response.status_code == 200
 
         # Get data
@@ -100,19 +103,19 @@ class WizardAPITests(TestCase):
     # Regular wizard, name based
     ####################################################################################################################
     def test_get_named_wizard_without_step(self):
-        response = self.client.get(reverse('named_wizard'))
+        response = self.client.get(reverse('named_wizard'), **self.header)
         assert response.status_code == 200
         assert self._get_response_data(response)['current_step'] == 'page1'
 
     def test_get_named_wizard_data_step(self):
-        response = self.client.get(reverse('named_wizard_step', kwargs={'step': 'data'}))
+        response = self.client.get(reverse('named_wizard_step', kwargs={'step': 'data'}), **self.header)
         assert response.status_code == 200
 
         data = self._get_response_data(response)
         assert data['structure'] == ['page1', 'page2']
 
     def test_get_named_wizard_with_step(self):
-        response = self.client.get(reverse('named_wizard_step', kwargs={'step': 'page2'}))
+        response = self.client.get(reverse('named_wizard_step', kwargs={'step': 'page2'}), **self.header)
         assert response.status_code == 200
         assert self._get_response_data(response)['current_step'] == 'page2'
 
@@ -158,7 +161,7 @@ class WizardAPITests(TestCase):
         assert data['steps']['page2']['valid'] is True
 
         # Fetch data
-        response = self.client.get(reverse('named_wizard_step', kwargs={'step': 'data'}), {})
+        response = self.client.get(reverse('named_wizard_step', kwargs={'step': 'data'}), {}, **self.header)
         assert response.status_code == 200
 
         # Get data
@@ -181,19 +184,19 @@ class WizardAPITests(TestCase):
     # Substep wizard, index based
     ####################################################################################################################
     def test_get_substep_wizard_without_step(self):
-        response = self.client.get(reverse('substep_wizard'))
+        response = self.client.get(reverse('substep_wizard'), **self.header)
         assert response.status_code == 200
         assert self._get_response_data(response)['current_step'] == '0|step1.1'
 
     def test_get_substep_wizard_data_step(self):
-        response = self.client.get(reverse('substep_wizard_step', kwargs={'step': 'data'}))
+        response = self.client.get(reverse('substep_wizard_step', kwargs={'step': 'data'}), **self.header)
         assert response.status_code == 200
 
         data = self._get_response_data(response)
         assert data['structure'] == ['0|step1.1', '0|step1.2', '1|step2.1']
 
     def test_get_substep_wizard_with_step(self):
-        response = self.client.get(reverse('substep_wizard_step', kwargs={'step': '0|step1.2'}))
+        response = self.client.get(reverse('substep_wizard_step', kwargs={'step': '0|step1.2'}), **self.header)
         assert response.status_code == 200
         assert self._get_response_data(response)['current_step'] == '0|step1.2'
 
@@ -255,7 +258,7 @@ class WizardAPITests(TestCase):
         assert data['steps']['1|step2.1']['valid'] is True
 
         # Fetch data
-        response = self.client.get(reverse('substep_wizard_step', kwargs={'step': 'data'}), {})
+        response = self.client.get(reverse('substep_wizard_step', kwargs={'step': 'data'}), {}, **self.header)
         assert response.status_code == 200
 
         # Get data
@@ -280,19 +283,19 @@ class WizardAPITests(TestCase):
     # Substep wizard, name based
     ####################################################################################################################
     def test_get_named_substep_wizard_without_step(self):
-        response = self.client.get(reverse('named_substep_wizard'))
+        response = self.client.get(reverse('named_substep_wizard'), **self.header)
         assert response.status_code == 200
         assert self._get_response_data(response)['current_step'] == 'page1|step1.1'
 
     def test_get_named_substep_wizard_data_step(self):
-        response = self.client.get(reverse('named_substep_wizard_step', kwargs={'step': 'data'}))
+        response = self.client.get(reverse('named_substep_wizard_step', kwargs={'step': 'data'}), **self.header)
         assert response.status_code == 200
 
         data = self._get_response_data(response)
         assert data['structure'] == ['page1|step1.1', 'page1|step1.2', 'page2|step2.1']
 
     def test_get_named_substep_wizard_with_step(self):
-        response = self.client.get(reverse('named_substep_wizard_step', kwargs={'step': 'page1|step1.2'}))
+        response = self.client.get(reverse('named_substep_wizard_step', kwargs={'step': 'page1|step1.2'}), **self.header)
         assert response.status_code == 200
         assert self._get_response_data(response)['current_step'] == 'page1|step1.2'
 
@@ -354,7 +357,7 @@ class WizardAPITests(TestCase):
         assert data['steps']['page2|step2.1']['valid'] is True
 
         # Fetch data
-        response = self.client.get(reverse('named_substep_wizard_step', kwargs={'step': 'data'}), {})
+        response = self.client.get(reverse('named_substep_wizard_step', kwargs={'step': 'data'}), {}, **self.header)
         assert response.status_code == 200
 
         # Get data
