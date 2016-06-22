@@ -46,6 +46,10 @@ class WizardAPIView(NamedUrlWizardView):
           callables. If the value of for a specific `step_name` is callable it
           will be called with the wizardview instance as the only argument.
           If the return value is true, the step's form will be used.
+        * `json_encoder_class` - Subclass of 'json.JSONEncoder', used for serialization. Defaults to DjangoJSONEncoder
+        * `data_step_name` - String to override 'data_step' url pathcomponent. Defaults to 'data'
+        * `commit_step_name` - String to override 'commit_step' url pathcomponent. Defaults to 'commit'
+        * `substep_separator` - String to override 'substep_separator'. Defaults to '|'
         """
 
         kwargs.update({
