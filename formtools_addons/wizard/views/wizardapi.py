@@ -16,6 +16,9 @@ from formtools.wizard.views import NamedUrlWizardView
 
 class WizardAPIView(NamedUrlWizardView):
     data_step_name = None
+    goto_step_name = None
+    prev_step_name = None
+    next_step_name = None
     new_step_name = None
     commit_step_name = None
     substep_separator = None
@@ -62,6 +65,9 @@ class WizardAPIView(NamedUrlWizardView):
             'json_encoder_class':json_encoder_class or kwargs.pop('json_encoder_class',
                                                            getattr(cls, 'json_encoder_class', None)) or JsonEncoder,
             'data_step_name': kwargs.pop('data_step_name', 'data'),
+            'goto_step_name': kwargs.pop('goto_step_name', 'goto'),
+            'prev_step_name': kwargs.pop('prev_step_name', 'prev'),
+            'next_step_name': kwargs.pop('next_step_name', 'next'),
             'commit_step_name': kwargs.pop('commit_step_name', 'commit'),
             'substep_separator': kwargs.pop('substep_separator', '|'),
         })
@@ -139,9 +145,6 @@ class WizardAPIView(NamedUrlWizardView):
 
         # is the current step the "data" name/view?
         if step_url == self.data_step_name:
-            step = kwargs.pop('substep', None)
-            if step is not None:
-                self.storage.current_step = step
             return self.render_state(current_step=self.storage.current_step)
 
         # is the url step name not equal to the step in the storage?
@@ -163,9 +166,27 @@ class WizardAPIView(NamedUrlWizardView):
     def post(self, request, *args, **kwargs):
         step = kwargs.pop('step', None)
         if step == self.commit_step_name:
+            # Commit wizard
             return self.commit_and_render_done(**kwargs)
+        elif step == self.goto_step_name:
+            # Goto a specific step
+            goto_step = kwargs.pop('substep', None)
+            if goto_step is None:
+                return self.render_response_error('step is not defined', status_code=400)
+            if goto_step not in self.steps.all:
+                return self.render_response_error('unknown step', status_code=400)
+            self.storage.current_step = goto_step
+            return self.render_state(current_step=self.storage.current_step)
+        elif step == self.prev_step_name:
+            # Go to previous step
+            self.storage.current_step = self.get_prev_step()
+            return self.render_state(current_step=self.storage.current_step)
+        elif step == self.next_step_name:
+            # Go to next step
+            self.storage.current_step = self.get_next_step()
+            return self.render_state(current_step=self.storage.current_step)
 
-        if not step in self.steps.all:
+        if step not in self.steps.all:
            return self.render_response_error('Missing required parameter "step"')
 
         # Update current step
@@ -183,9 +204,9 @@ class WizardAPIView(NamedUrlWizardView):
                                         self.process_step_files(form))
 
             # proceed to the next step, since the input was valid
-            next_step = self.get_next_step(step=step)
-            self.storage.current_step = next_step
-            return self.render_state(current_step=next_step)
+            goto_step = self.get_next_step(step=step)
+            self.storage.current_step = goto_step
+            return self.render_state(current_step=goto_step)
 
         # Return current step_data, since the data was invalid
         return self.render_state(current_step=step, form=form, status_code=400)
