@@ -44,20 +44,35 @@
         /*
         Function to parse WizardAPIView structure.
          */
-        var result = {};
+        var getStepIndex = function(resultArray, step){
+            var i = -1;
+            var result = -1;
+            resultArray.forEach(function(data){
+                i += 1;
+                if(data == step || data[0] == step){
+                    result = i;
+                }
+            });
+            return result;
+        };
+
+        var result = [];
         stepNames.forEach(function(stepName){
             var stepInfo = parseStepName(stepName);
 
             if(stepInfo.subStep == null){
                 // Regular item (NOT TESTED)
-                result[stepInfo.step] = [];
+                result.push(stepInfo.step);
             }
             else{
                 // SubStep item
-                if(!result[stepInfo.step]){
-                    result[stepInfo.step] = [];
+                var stepIndex = getStepIndex(result, stepInfo.step);
+                if(stepIndex < 0){
+                    result.push([stepInfo.step, []]);
+                    stepIndex = getStepIndex(result, stepInfo.step);
                 }
-                result[stepInfo.step].push(stepInfo.subStep);
+                var stepData = result[stepIndex];
+                stepData[1].push(stepInfo.subStep);
             }
         });
 
@@ -147,8 +162,13 @@
     app.directive('wizard', ['$http', function($http) {
         return {
             link: function($scope, elem, attrs){
-                $scope.refresh = function(){
-                    var promise = $http.get(getWizardUrl('data'));
+                $scope.refresh = function(step, subStep){
+                    var path = 'data';
+                    if(step){
+                        subStep = subStep || '';
+                        path += '/' + step + substep_separator + subStep;
+                    }
+                    var promise = $http.get(getWizardUrl(path));
                     promise.success(function(data){
                         $scope.handle_new_data(data);
                     }).error(function(){
@@ -158,11 +178,7 @@
 
                 $scope.action_edit_step = function(subStep, step){
                     step = step || $scope.data.current_step.step;
-                    $scope.data.current_step = {
-                        step: step,
-                        subStep: subStep,
-                        fullStep: step + substep_separator + subStep
-                    }
+                    $scope.refresh(step, subStep);
                 };
 
                 $scope.action_submit_step = function(form_id){
@@ -180,6 +196,18 @@
                         $scope.error = true;
                         $scope.handle_new_data(data);
                     });
+                };
+
+                $scope.action_step_back = function(){
+                    var currentStepIndex = $scope.get_current_step_index();
+                    if(currentStepIndex <= 0){
+                        return;
+                    }
+
+                    var previousStep = $scope.get_step_by_index(currentStepIndex - 1);
+                    var subSteps = $scope.get_sub_step_names(previousStep);
+                    var subStep = subSteps[subSteps.length - 1];
+                    $scope.refresh(previousStep, subStep);
                 };
 
                 $scope.handle_new_data = function(data){
@@ -208,6 +236,43 @@
                     });
                 };
 
+                $scope.get_step_by_index = function (index) {
+                    var data = $scope.data.structure[index];
+                    if(data instanceof Array){
+                        return data[0];
+                    }
+                    else{
+                        return data;
+                    }
+                };
+
+                $scope.get_step_index = function(step) {
+                    var i = -1;
+                    var result = -1;
+                    $scope.data.structure.forEach(function (data) {
+                        i += 1;
+                        if (data == step || data[0] == step) {
+                            result = i;
+                        }
+                    });
+                    return result;
+                };
+
+                $scope.get_current_step_index = function () {
+                    if(!$scope.data){
+                        return -1;
+                    }
+                    return $scope.get_step_index($scope.data.current_step.step);
+                };
+
+                $scope.get_current_step = function(){
+                    return $scope.data.current_step.step;
+                };
+
+                $scope.get_current_sub_step = function(){
+                    return $scope.data.current_step.subStep;
+                };
+
                 $scope.is_current_sub_step = function(subStep){
                     return subStep == $scope.data.current_step.subStep;
                 };
@@ -219,7 +284,9 @@
                 $scope.get_sub_step_names = function(step){
                     step = step || ($scope.data ? $scope.data.current_step.step : null);
                     if(!step)return [];
-                    return $scope.data.structure[step];
+                    var stepIndex = $scope.get_step_index(step);
+                    var stepData = $scope.data.structure[stepIndex];
+                    return stepData[1];
                 };
 
                 // Refresh scope
