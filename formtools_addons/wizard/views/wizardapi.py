@@ -4,22 +4,14 @@ from __future__ import unicode_literals
 import uuid
 import json
 import hashlib
-from datetime import datetime, date
 from collections import OrderedDict
 
 import six
+from django.core.serializers.json import DjangoJSONEncoder as JsonEncoder
 from django.forms import forms, formsets
 from django.http.response import JsonResponse
 from formtools.wizard.storage.exceptions import NoFileStorageConfigured
 from formtools.wizard.views import NamedUrlWizardView
-
-
-def default_json_serializer(obj):
-    """JSON serializer for objects not serializable by default json code"""
-    if isinstance(obj, (datetime, date)):
-        serialized = obj.isoformat()
-        return serialized
-    raise TypeError("Type not serializable")
 
 
 class WizardAPIView(NamedUrlWizardView):
@@ -27,11 +19,12 @@ class WizardAPIView(NamedUrlWizardView):
     new_step_name = None
     commit_step_name = None
     substep_separator = None
-    json_serializer = None
+    json_encoder_class = None
+    _json_encoder = None
 
     @classmethod
     def get_initkwargs(cls, form_list=None, initial_dict=None,
-                       instance_dict=None, condition_dict=None, *args, **kwargs):
+                       instance_dict=None, condition_dict=None, json_encoder_class=None, *args, **kwargs):
         """
         Creates a dict with all needed parameters for the form wizard instances
 
@@ -53,6 +46,10 @@ class WizardAPIView(NamedUrlWizardView):
           callables. If the value of for a specific `step_name` is callable it
           will be called with the wizardview instance as the only argument.
           If the return value is true, the step's form will be used.
+        * `json_encoder_class` - Subclass of 'json.JSONEncoder', used for serialization. Defaults to DjangoJSONEncoder
+        * `data_step_name` - String to override 'data_step' url pathcomponent. Defaults to 'data'
+        * `commit_step_name` - String to override 'commit_step' url pathcomponent. Defaults to 'commit'
+        * `substep_separator` - String to override 'substep_separator'. Defaults to '|'
         """
 
         kwargs.update({
@@ -62,9 +59,10 @@ class WizardAPIView(NamedUrlWizardView):
                                                          getattr(cls, 'instance_dict', None)) or {},
             'condition_dict': condition_dict or kwargs.pop('condition_dict',
                                                            getattr(cls, 'condition_dict', None)) or {},
-            'json_serializer': kwargs.pop('json_serializer', getattr(cls, 'json_serializer', default_json_serializer)),
+            'json_encoder_class':json_encoder_class or kwargs.pop('json_encoder_class',
+                                                           getattr(cls, 'json_encoder_class', None)) or JsonEncoder,
             'data_step_name': kwargs.pop('data_step_name', 'data'),
-            'commit_step_name': kwargs.pop('data_step_name', 'commit'),
+            'commit_step_name': kwargs.pop('commit_step_name', 'commit'),
             'substep_separator': kwargs.pop('substep_separator', '|'),
         })
 
@@ -126,6 +124,12 @@ class WizardAPIView(NamedUrlWizardView):
         # build the kwargs for the wizardview instances
         kwargs['form_list'] = computed_form_list
         return kwargs
+
+    @property
+    def json_encoder(self):
+        if self._json_encoder is None:
+            self._json_encoder = self.json_encoder_class()
+        return self._json_encoder
 
     def get(self, request, *args, **kwargs):
         """
@@ -219,7 +223,7 @@ class WizardAPIView(NamedUrlWizardView):
     def render_preview(self, step, form):
         if form.is_bound and form.is_valid():
             data = form.cleaned_data
-            return '<p>STEP: %s, DATA: %s</p>' % (step, json.dumps(data, default=self.json_serializer))
+            return '<p>STEP: %s, DATA: %s</p>' % (step, json.dumps(data, default=self.json_encoder.default))
         return None
 
     def render_state(self, current_step, form=None, status_code=200):
@@ -237,14 +241,16 @@ class WizardAPIView(NamedUrlWizardView):
             if form is not None and step == current_step:
                 current_form = form
             data['steps'][step] = self.get_step_data(step=step, form=current_form)
-        return JsonResponse(data, status=status_code)
+        return JsonResponse(data, status=status_code, encoder=self.json_encoder_class)
 
     def render_response(self, data=None, status_code=200):
         data = data or {}
-        return JsonResponse(data, status=status_code)
+        return JsonResponse(data, status=status_code, encoder=self.json_encoder_class)
 
     def render_response_error(self, reason='', status_code=400, **kwargs):
-        return JsonResponse(dict({'reason': reason}, **kwargs), status=status_code)
+        data = {'reason': reason}
+        data.update(**kwargs)
+        return JsonResponse(data, status=status_code, encoder=self.json_encoder_class)
 
     def is_valid(self):
         valid = True
