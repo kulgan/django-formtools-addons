@@ -162,13 +162,39 @@
     app.directive('wizard', ['$http', function($http) {
         return {
             link: function($scope, elem, attrs){
-                $scope.refresh = function(step, subStep){
-                    var path = 'data';
-                    if(step){
-                        subStep = subStep || '';
-                        path += '/' + step + substep_separator + subStep;
+                $scope.refresh = function(){
+                    var promise = $http.get(getWizardUrl('data'));
+                    promise.success(function(data){
+                        $scope.handle_new_data(data);
+                    }).error(function(){
+                        $scope.error = true;
+                    });
+                };
+
+                $scope.prev = function(){
+                    var promise = $http.post(getWizardUrl('prev'));
+                    promise.success(function(data){
+                        $scope.handle_new_data(data);
+                    }).error(function(){
+                        $scope.error = true;
+                    });
+                };
+
+                $scope.next = function(){
+                    var promise = $http.post(getWizardUrl('next'));
+                    promise.success(function(data){
+                        $scope.handle_new_data(data);
+                    }).error(function(){
+                        $scope.error = true;
+                    });
+                };
+
+                $scope.goto = function(step, substep){
+                    var fullStep = step;
+                    if(substep){
+                        fullStep += substep_separator + substep;
                     }
-                    var promise = $http.get(getWizardUrl(path));
+                    var promise = $http.post(getWizardUrl('goto/' + fullStep));
                     promise.success(function(data){
                         $scope.handle_new_data(data);
                     }).error(function(){
@@ -258,11 +284,33 @@
                     return result;
                 };
 
+                $scope.get_sub_step_index = function(step, subStep) {
+                    var i = -1;
+                    var result = -1;
+
+                    var stepIndex = $scope.get_step_index(step);
+
+                    $scope.data.structure[stepIndex][1].forEach(function(data){
+                        i += 1;
+                        if (data == subStep) {
+                            result = i;
+                        }
+                    });
+                    return result;
+                };
+
                 $scope.get_current_step_index = function () {
                     if(!$scope.data){
                         return -1;
                     }
                     return $scope.get_step_index($scope.data.current_step.step);
+                };
+
+                $scope.get_current_sub_step_index = function () {
+                    if(!$scope.data){
+                        return -1;
+                    }
+                    return $scope.get_sub_step_index($scope.data.current_step.step, $scope.data.current_step.subStep);
                 };
 
                 $scope.get_current_step = function(){
