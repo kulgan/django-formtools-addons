@@ -62,7 +62,7 @@ class WizardAPIView(NamedUrlWizardView):
             'json_encoder_class':json_encoder_class or kwargs.pop('json_encoder_class',
                                                            getattr(cls, 'json_encoder_class', None)) or JsonEncoder,
             'data_step_name': kwargs.pop('data_step_name', 'data'),
-            'commit_step_name': kwargs.pop('data_step_name', 'commit'),
+            'commit_step_name': kwargs.pop('commit_step_name', 'commit'),
             'substep_separator': kwargs.pop('substep_separator', '|'),
         })
 
