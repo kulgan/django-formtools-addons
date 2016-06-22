@@ -139,6 +139,9 @@ class WizardAPIView(NamedUrlWizardView):
 
         # is the current step the "data" name/view?
         if step_url == self.data_step_name:
+            step = kwargs.pop('substep', None)
+            if step is not None:
+                self.storage.current_step = step
             return self.render_state(current_step=self.storage.current_step)
 
         # is the url step name not equal to the step in the storage?
