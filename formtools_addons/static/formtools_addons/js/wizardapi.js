@@ -211,7 +211,7 @@
 
                 $scope.action_edit_step = function(subStep, step){
                     step = step || $scope.data.current_step.step;
-                    $scope.refresh(step, subStep);
+                    $scope.goto(step, subStep);
                 };
 
                 $scope.action_submit_step = function(form_id){
