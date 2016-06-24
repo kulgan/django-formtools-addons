@@ -215,6 +215,9 @@ class WizardAPIView(NamedUrlWizardView):
         # Not using prefixes
         return ''
 
+    def get_current_step(self, step=None):
+        return step or self.storage.current_step
+
     def commit_and_render_done(self, **kwargs):
         """
         This method gets called when all forms passed. The method should also
@@ -253,8 +256,10 @@ class WizardAPIView(NamedUrlWizardView):
     def render_state(self, current_step, form=None, status_code=200):
         valid = self.is_valid()
 
+        current_step = self.get_current_step(step=current_step)
+
         data = {
-            'current_step': current_step if not valid else None,
+            'current_step':  current_step if not valid else None,
             'done': valid,
             'structure': self.get_structure(),
             'steps': {}
