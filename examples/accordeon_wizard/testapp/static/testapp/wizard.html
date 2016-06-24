@@ -1,0 +1,27 @@
+<input type="checkbox" ng-model="debug">
+<pre ng-show="debug" ng-bind="data|json"></pre>
+
+<div style="background: #00AAFF">
+    <div ng-repeat="subStep in get_sub_step_names()">
+        <h1 ng-bind="subStep"></h1>
+        <div ng-show="is_current_sub_step(subStep)">
+            <div ng-show="get_current_step_index() > 0 || get_current_sub_step_index() > 0">
+                <button ng-click="prev()">back</button>
+            </div>
+            <form ng-attr-id="{{  get_sub_step(subStep).form_id }}"
+                  ng-submit="action_submit_step(get_sub_step(subStep).form_id)">
+                <div compile="get_sub_step(subStep).form"></div>
+                <input type="submit" value="Next step"/>
+            </form>
+        </div>
+        <div ng-hide="is_current_sub_step(subStep)">
+            <div ng-show="get_sub_step(subStep).valid">
+                <div compile="get_sub_step(subStep).preview"></div>
+                <button ng-click="action_edit_step(subStep)">edit</button>
+            </div>
+            <div ng-hide="get_sub_step(subStep).valid">
+                Preview without bound data
+            </div>
+        </div>
+    </div>
+</div>

@@ -4,6 +4,7 @@
 
 (function() {
     var static_root = $('body').data('staticroot');
+    var wizard_template = $('body').data('template') || 'formtools_addons/templates/directives/wizardapi/wizard.html';
     var wizard_root = $('body').data('wizardroot') || '/wizard/';
     var substep_separator = '|';
 
@@ -16,6 +17,12 @@
         }
 
         return result;
+    };
+
+    var getWizardTemplate = function(){
+        var templateUrl = static_root + wizard_template;
+        console.log('getWizardTemplate', templateUrl);
+        return templateUrl;
     };
 
     var parseStepName = function(stepName){
@@ -340,7 +347,7 @@
                 // Refresh scope
                 $scope.refresh();
             },
-            templateUrl: static_root + 'formtools_addons/templates/directives/wizardapi/wizard.html'
+            templateUrl: getWizardTemplate()
         };
     }]);
 })();
