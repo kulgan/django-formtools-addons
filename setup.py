@@ -13,17 +13,7 @@ from pip.req import parse_requirements
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-
-def get_version(*file_paths):
-    filename = os.path.join(os.path.dirname(__file__), *file_paths)
-    version_file = open(filename).read()
-    version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]",
-                              version_file, re.M)
-    if version_match:
-        return version_match.group(1)
-    raise RuntimeError('Unable to find version string.')
-
-version = get_version('formtools_addons', '__init__.py')
+__version__ = '0.1.0'
 
 # parse_requirements() returns generator of pip.req.InstallRequirement objects
 requirements = [str(ir.req) for ir in parse_requirements(os.path.join(BASE_DIR, 'requirements.txt'), session=False)]
@@ -40,7 +30,7 @@ if sys.argv[-1] == 'publish':
 
 if sys.argv[-1] == 'tag':
     print("Tagging the version on github:")
-    os.system("git tag -a %s -m 'version %s'" % (version, version))
+    os.system("git tag -a %s -m 'version %s'" % (__version__, __version__))
     os.system("git push --tags")
     sys.exit()
 
@@ -49,7 +39,7 @@ history = open('HISTORY.rst').read().replace('.. :changelog:', '')
 
 setup(
     name='django-formtools-addons',
-    version=version,
+    version=__version__,
     description="""'Addons for Django Formtools'""",
     long_description=readme + '\n\n' + history,
     author='VikingCo',
