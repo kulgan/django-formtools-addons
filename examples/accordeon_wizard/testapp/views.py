@@ -19,6 +19,11 @@ def show_testform_2_conditional(wizard):
     return cleaned_data.get('sender', None) != 'dirk@gmail.com'
 
 
+def show_testform_5_conditional(wizard):
+    cleaned_data = wizard.get_cleaned_data_for_step('page1|testform2') or {}
+    return cleaned_data.get('message', '') != 'test'
+
+
 class TestWizard(WizardAPIView):
     storage_name = 'formtools.wizard.storage.session.SessionStorage'
 
@@ -35,12 +40,13 @@ class TestWizard(WizardAPIView):
     ]
 
     condition_dict = {
-        'page1|testform2': show_testform_2_conditional
+        'page1|testform2': show_testform_2_conditional,
+        'page2|testform5': show_testform_5_conditional
     }
 
     templates = {
         'page1|testform1': 'testapp/testform1.html',
-        'page1|testform2': 'testapp/testform2.html'
+        'page1|testform2': 'testapp/testform2.html',
     }
 
     def render_form(self, step, form):

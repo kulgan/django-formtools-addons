@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-from django.conf.urls import url, include
-from django.shortcuts import render
+
+from django.conf.urls import url
 from django.views.decorators.csrf import ensure_csrf_cookie
 
 from .views import TestWizard, TestWizardContainer

@@ -145,7 +145,7 @@ class WizardAPIView(NamedUrlWizardView):
 
         # is the current step the "data" name/view?
         if step_url == self.data_step_name:
-            return self.render_state(current_step=self.storage.current_step)
+            return self.render_state(current_step=self.steps.current)
 
         # is the url step name not equal to the step in the storage?
         # if yes, change the step in the storage (if name exists)
@@ -196,7 +196,7 @@ class WizardAPIView(NamedUrlWizardView):
         form = self.get_form(data=self.request.POST, files=self.request.FILES)
 
         # and try to validate
-        if form.is_valid():
+        if self.is_valid(form=form):
             # if the form is valid, store the cleaned data and files.
             self.storage.set_step_data(self.steps.current,
                                        self.process_step(form))
@@ -204,7 +204,9 @@ class WizardAPIView(NamedUrlWizardView):
                                         self.process_step_files(form))
 
             # proceed to the next step, since the input was valid
-            goto_step = self.get_next_step(step=step)
+            goto_step = None
+            if step != self.steps.last:
+                goto_step = self.get_next_step(step=step)
             self.storage.current_step = goto_step
             return self.render_state(current_step=goto_step)
 
@@ -216,7 +218,11 @@ class WizardAPIView(NamedUrlWizardView):
         return ''
 
     def get_current_step(self, step=None):
-        return step or self.storage.current_step
+        # return step or self.storage.current_step
+        return step or self.steps.current
+
+    def clean_form(self, step, form):
+        return form.is_valid()
 
     def commit_and_render_done(self, **kwargs):
         """
@@ -254,13 +260,16 @@ class WizardAPIView(NamedUrlWizardView):
         return None
 
     def render_state(self, current_step, form=None, status_code=200):
+        done = current_step is None
+
         valid = self.is_valid()
 
         current_step = self.get_current_step(step=current_step)
 
         data = {
-            'current_step':  current_step if not valid else None,
-            'done': valid,
+            'done': done,
+            'valid': valid,
+            'current_step':  current_step if (not done or not valid) else None,
             'structure': self.get_structure(),
             'steps': {}
         }
@@ -281,7 +290,10 @@ class WizardAPIView(NamedUrlWizardView):
         data.update(**kwargs)
         return JsonResponse(data, status=status_code, encoder=self.json_encoder_class)
 
-    def is_valid(self):
+    def is_valid(self, form=None):
+        if form is not None:
+            return form.is_valid()
+
         valid = True
         for form_key in self.get_form_list():
             form_obj = self.get_form(step=form_key,

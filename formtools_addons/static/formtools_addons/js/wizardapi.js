@@ -113,7 +113,7 @@
 
     var transformData = function (data) {
         var fallback_step = data.structure[0];
-        if(data.done){
+        if (data.done) {
             fallback_step = data.structure[data.structure.length - 1];
         }
 
@@ -247,7 +247,7 @@
                     data = transformData(data);
                     console.log(data);
 
-                    if(data.done){
+                    if(data.done && data.valid){
                         $scope.handle_done(data);
                         return;
                     }
