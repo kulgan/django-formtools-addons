@@ -3,4 +3,7 @@ include CONTRIBUTING.rst
 include HISTORY.rst
 include LICENSE
 include README.rst
+include requirements.txt
+include requirements-dev.txt
+include requirements-test.txt
 recursive-include formtools_addons *.html *.png *.gif *js *.css *jpg *jpeg *svg *py

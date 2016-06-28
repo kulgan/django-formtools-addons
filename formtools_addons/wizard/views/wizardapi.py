@@ -145,7 +145,7 @@ class WizardAPIView(NamedUrlWizardView):
 
         # is the current step the "data" name/view?
         if step_url == self.data_step_name:
-            return self.render_state(current_step=self.steps.current)
+            return self.render_state(current_step=self.storage.current_step)
 
         # is the url step name not equal to the step in the storage?
         # if yes, change the step in the storage (if name exists)
@@ -196,7 +196,7 @@ class WizardAPIView(NamedUrlWizardView):
         form = self.get_form(data=self.request.POST, files=self.request.FILES)
 
         # and try to validate
-        if self.is_valid(form=form):
+        if form.is_valid():
             # if the form is valid, store the cleaned data and files.
             self.storage.set_step_data(self.steps.current,
                                        self.process_step(form))
@@ -204,9 +204,7 @@ class WizardAPIView(NamedUrlWizardView):
                                         self.process_step_files(form))
 
             # proceed to the next step, since the input was valid
-            goto_step = None
-            if step != self.steps.last:
-                goto_step = self.get_next_step(step=step)
+            goto_step = self.get_next_step(step=step)
             self.storage.current_step = goto_step
             return self.render_state(current_step=goto_step)
 
@@ -218,11 +216,7 @@ class WizardAPIView(NamedUrlWizardView):
         return ''
 
     def get_current_step(self, step=None):
-        # return step or self.storage.current_step
-        return step or self.steps.current
-
-    def clean_form(self, step, form):
-        return form.is_valid()
+        return step or self.storage.current_step
 
     def commit_and_render_done(self, **kwargs):
         """
@@ -260,16 +254,13 @@ class WizardAPIView(NamedUrlWizardView):
         return None
 
     def render_state(self, current_step, form=None, status_code=200):
-        done = current_step is None
-
         valid = self.is_valid()
 
         current_step = self.get_current_step(step=current_step)
 
         data = {
-            'done': done,
-            'valid': valid,
-            'current_step':  current_step if (not done or not valid) else None,
+            'current_step':  current_step if not valid else None,
+            'done': valid,
             'structure': self.get_structure(),
             'steps': {}
         }
