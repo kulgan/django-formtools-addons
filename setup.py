@@ -9,6 +9,10 @@ try:
 except ImportError:
     from distutils.core import setup
 
+from pip.req import parse_requirements
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 
 def get_version(*file_paths):
     filename = os.path.join(os.path.dirname(__file__), *file_paths)
@@ -20,6 +24,9 @@ def get_version(*file_paths):
     raise RuntimeError('Unable to find version string.')
 
 version = get_version('formtools_addons', '__init__.py')
+
+# parse_requirements() returns generator of pip.req.InstallRequirement objects
+requirements = [str(ir.req) for ir in parse_requirements(os.path.join(BASE_DIR, 'requirements.txt'), session=False)]
 
 if sys.argv[-1] == 'publish':
     try:
@@ -52,8 +59,8 @@ setup(
         'formtools_addons',
     ],
     include_package_data=True,
-    install_requires=[
-    ],
+    install_requires=requirements,
+    extras_require={},
     license="BSD",
     zip_safe=False,
     keywords='django-formtools-addons',
