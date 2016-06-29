@@ -78,3 +78,30 @@ class NamedSubStepContactWizardAPIView(WizardAPIView):
 
     def done(self, form_list, **kwargs):
         return redirect('/next-page/')
+
+
+def show_page2_step2(wizard):
+    data = wizard.get_cleaned_data_for_step('page1|step1.1') or {}
+    return data.get('name', '') != 'hurray'
+
+
+class ComplexNamedSubStepContactWizardAPIView(WizardAPIView):
+    storage_name = 'formtools.wizard.storage.session.SessionStorage'
+    form_list = (
+        ('page1', (
+            ('step1.1', Page1),
+            ('step1.2', Page2),
+            ('step1.3', Page3)
+        )),
+        ('page2', (
+            ('step2.1', Page1),
+            ('step2.2', Page2),
+        ))
+    )
+
+    condition_dict = {
+        'page2|step2.2': show_page2_step2
+    }
+
+    def done(self, form_list, **kwargs):
+        return redirect('/next-page/')

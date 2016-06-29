@@ -375,6 +375,149 @@ class WizardAPITests(TestCase):
 
         assert response.status_code == 302
 
+    def test_post_complex_named_substep_wizard_step(self):
+        # Perform step 0
+        input_data1 = {
+            'name': 'test',
+            'thirsty': True
+        }
+        response = self.client.post(reverse('complex_named_substep_wizard_step', kwargs={'step': 'page1|step1.1'}),
+                                    input_data1)
+        assert response.status_code == 200
+
+        # Get data
+        data = self._get_response_data(response)
+        assert data['current_step'] == 'page1|step1.2'  # Next step's name
+        assert data['done'] is False
+
+        # Perform step 1
+        input_data2 = {
+            'address1': 'Address 1',
+            'address2': 'Address 2'
+        }
+        response = self.client.post(reverse('complex_named_substep_wizard_step', kwargs={'step': 'page1|step1.2'}),
+                                    input_data2)
+        assert response.status_code == 200
+
+        # Get data
+        data = self._get_response_data(response)
+        assert data['current_step'] == 'page1|step1.3'  # Next step's name
+        assert data['done'] is False
+
+        # Perform step 2
+        input_data3 = {
+            'random_crap': 'Blablabla'
+        }
+        response = self.client.post(reverse('complex_named_substep_wizard_step', kwargs={'step': 'page1|step1.3'}),
+                                    input_data3)
+        assert response.status_code == 200
+
+        # Get data
+        data = self._get_response_data(response)
+        assert data['current_step'] == 'page2|step2.1'  # Next step's name
+        assert data['done'] is False
+
+        # Perform step 3
+        input_data4 = {
+            'name': 'test2',
+            'thirsty': True
+        }
+        response = self.client.post(reverse('complex_named_substep_wizard_step', kwargs={'step': 'page2|step2.1'}),
+                                    input_data4)
+        assert response.status_code == 200
+
+        # Get data
+        data = self._get_response_data(response)
+        assert data['current_step'] == 'page2|step2.2'  # Next step's name
+        assert data['done'] is False
+
+        ############################################################################################################
+        # NOW WE JUMP BACK TO STEP 1.1!
+        ############################################################################################################
+        response = self.client.post(reverse('complex_named_substep_wizard_step', kwargs={'step': 'goto/page1|step1.1'}))
+        assert response.status_code == 200
+
+        # Get data
+        data = self._get_response_data(response)
+        assert data['current_step'] == 'page1|step1.1'  # Next step's name
+        assert data['done'] is False
+        assert data['valid'] is False
+        assert 'page2|step2.2' in data['steps']
+
+        # We change the 'name' value to 'hurray' (see tests/wizard/wizardapitests/url.py)
+        input_data5 = {
+            'name': 'hurray',
+            'thirsty': True
+        }
+        response = self.client.post(reverse('complex_named_substep_wizard_step', kwargs={'step': 'page1|step1.1'}),
+                                    input_data5)
+        assert response.status_code == 200
+
+        # Get data
+        data = self._get_response_data(response)
+        assert data['current_step'] == 'page1|step1.2'  # Next step's name
+        assert data['done'] is False
+        assert data['valid'] is True
+        assert 'page2|step2.2' not in data['steps']
+
+        ############################################################################################################
+        # NOW WE JUMP FORWARD TO STEP 2.1!
+        ############################################################################################################
+        response = self.client.post(reverse('complex_named_substep_wizard_step', kwargs={'step': 'goto/page2|step2.1'}))
+        assert response.status_code == 200
+
+        # Get data
+        data = self._get_response_data(response)
+        assert data['current_step'] == 'page2|step2.1'  # Next step's name
+        assert data['done'] is False
+        assert data['valid'] is True
+
+        # Perform step 3
+        input_data6 = {
+            'name': 'test2',
+            'thirsty': True
+        }
+        response = self.client.post(reverse('complex_named_substep_wizard_step', kwargs={'step': 'page2|step2.1'}),
+                                    input_data6)
+        assert response.status_code == 200
+
+        # Get data
+        data = self._get_response_data(response)
+        assert data['current_step'] is None  # Next step's name
+        assert data['done'] is True
+        assert data['valid'] is True
+
+        # Get data
+        data = self._get_response_data(response)
+        assert data['current_step'] is None  # Next step's name
+        assert data['done'] is True
+
+        # Fetch data
+        response = self.client.get(reverse('complex_named_substep_wizard_step', kwargs={'step': 'data'}), {})
+        assert response.status_code == 200
+
+        # Get data
+        data = self._get_response_data(response)
+        assert data['current_step'] is None  # There should not be another step
+        assert data['done'] is True
+        assert data['steps']['page1|step1.1']['data']['name'] == input_data5['name']
+        assert data['steps']['page1|step1.1']['data']['thirsty'] == input_data5['thirsty']
+        assert data['steps']['page1|step1.1']['valid'] is True
+        assert data['steps']['page1|step1.2']['data']['address1'] == input_data2['address1']
+        assert data['steps']['page1|step1.2']['data']['address2'] == input_data2['address2']
+        assert data['steps']['page1|step1.2']['valid'] is True
+        assert data['steps']['page1|step1.3']['data']['random_crap'] == input_data3['random_crap']
+        assert data['steps']['page1|step1.3']['valid'] is True
+        assert data['steps']['page2|step2.1']['data']['name'] == input_data4['name']
+        assert data['steps']['page2|step2.1']['data']['thirsty'] == input_data4['thirsty']
+        assert data['steps']['page2|step2.1']['valid'] is True
+        assert 'page2|step2.2' not in data['steps']
+
+        # Commit data
+        response = self.client.post(reverse('complex_named_substep_wizard_step', kwargs={'step': 'commit'}), {})
+
+        assert response.status_code == 302
+
     def _get_response_data(self, response):
         assert isinstance(response, JsonResponse)
         return json.loads(response.content.decode('utf-8'))

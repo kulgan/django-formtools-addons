@@ -145,17 +145,18 @@ class WizardAPIView(NamedUrlWizardView):
 
         # is the current step the "data" name/view?
         if step_url == self.data_step_name:
-            return self.render_state(current_step=self.storage.current_step)
+            done = self.is_valid()
+            return self.render_state(step=self.storage.current_step, done=done)
 
         # is the url step name not equal to the step in the storage?
         # if yes, change the step in the storage (if name exists)
         elif step_url == self.steps.current:
             # URL step name and storage step name are equal, render!
-            return self.render_state(current_step=step_url)
+            return self.render_state(step=step_url)
 
         elif step_url in self.get_form_list():
             self.storage.current_step = step_url
-            return self.render_state(current_step=step_url)
+            return self.render_state(step=step_url)
 
         # invalid step name, reset to first and redirect.
         else:
@@ -176,15 +177,15 @@ class WizardAPIView(NamedUrlWizardView):
             if goto_step not in self.steps.all:
                 return self.render_response_error('unknown step', status_code=400)
             self.storage.current_step = goto_step
-            return self.render_state(current_step=self.storage.current_step)
+            return self.render_state(step=self.storage.current_step)
         elif step == self.prev_step_name:
             # Go to previous step
             self.storage.current_step = self.get_prev_step()
-            return self.render_state(current_step=self.storage.current_step)
+            return self.render_state(step=self.storage.current_step)
         elif step == self.next_step_name:
             # Go to next step
             self.storage.current_step = self.get_next_step()
-            return self.render_state(current_step=self.storage.current_step)
+            return self.render_state(step=self.storage.current_step)
 
         if step not in self.steps.all:
            return self.render_response_error('Missing required parameter "step"')
@@ -204,12 +205,13 @@ class WizardAPIView(NamedUrlWizardView):
                                         self.process_step_files(form))
 
             # proceed to the next step, since the input was valid
+            done = step == self.steps.last
             goto_step = self.get_next_step(step=step)
             self.storage.current_step = goto_step
-            return self.render_state(current_step=goto_step)
+            return self.render_state(step=goto_step, done=done)
 
         # Return current step_data, since the data was invalid
-        return self.render_state(current_step=step, form=form, status_code=400)
+        return self.render_state(step=step, form=form, status_code=400)
 
     def get_form_prefix(self, step=None, form=None):
         # Not using prefixes
@@ -233,7 +235,7 @@ class WizardAPIView(NamedUrlWizardView):
                                      files=self.storage.get_step_files(form_key))
             if not form_obj.is_valid():
                 # Not all forms all valid: Fail Fast!
-                return self.render_state(current_step=form_key, status_code=400)
+                return self.render_state(step=form_key, status_code=400)
             else:
                 final_forms[form_key] = form_obj
 
@@ -253,14 +255,15 @@ class WizardAPIView(NamedUrlWizardView):
             return '<p>STEP: %s, DATA: %s</p>' % (step, json.dumps(data, default=self.json_encoder.default))
         return None
 
-    def render_state(self, current_step, form=None, status_code=200):
+    def render_state(self, step=None, form=None, done=False, status_code=200):
         valid = self.is_valid()
 
-        current_step = self.get_current_step(step=current_step)
+        current_step = self.get_current_step(step=step)
 
         data = {
-            'current_step':  current_step if not valid else None,
-            'done': valid,
+            'current_step':  current_step if not done else None,
+            'done': done,
+            'valid': valid,
             'structure': self.get_structure(),
             'steps': {}
         }

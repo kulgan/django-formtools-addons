@@ -5,12 +5,13 @@ This is a URLconf to be loaded by tests.py. Add any URLs needed for tests only.
 from django.conf.urls import url
 
 from .forms import ContactWizardAPIView, NamedContactWizardAPIView, SubStepContactWizardAPIView, \
-    NamedSubStepContactWizardAPIView
+    NamedSubStepContactWizardAPIView, ComplexNamedSubStepContactWizardAPIView
 
 test_wizard1 = ContactWizardAPIView.as_view(url_name='wizard_step')
 test_wizard2 = NamedContactWizardAPIView.as_view(url_name='wizard_step')
 test_wizard3 = SubStepContactWizardAPIView.as_view(url_name='wizard_step')
 test_wizard4 = NamedSubStepContactWizardAPIView.as_view(url_name='wizard_step')
+test_wizard5 = ComplexNamedSubStepContactWizardAPIView.as_view(url_name='wizard_step')
 
 
 urlpatterns = [
@@ -29,4 +30,9 @@ urlpatterns = [
     # Steps will be (hopefully descriptive) strings
     url(r'^named-substep-wizard/(?P<step>.+)/$', test_wizard4, name='named_substep_wizard_step'),
     url(r'^named-substep-wizard/$', test_wizard4, name='named_substep_wizard'),
+
+    # Steps will be (hopefully descriptive) strings
+    url(r'^complex-named-substep-wizard/(?P<step>.+)/(?P<substep>.+)/$', test_wizard5, name='complex_named_substep_wizard_step'),
+    url(r'^complex-named-substep-wizard/(?P<step>.+)/$', test_wizard5, name='complex_named_substep_wizard_step'),
+    url(r'^complex-named-substep-wizard/$', test_wizard5, name='complex_named_substep_wizard'),
 ]
