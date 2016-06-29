@@ -197,7 +197,7 @@ class WizardAPIView(NamedUrlWizardView):
         form = self.get_form(data=self.request.POST, files=self.request.FILES)
 
         # and try to validate
-        if form.is_valid():
+        if self.is_valid(form):
             # if the form is valid, store the cleaned data and files.
             self.storage.set_step_data(self.steps.current,
                                        self.process_step(form))
