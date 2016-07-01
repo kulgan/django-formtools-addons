@@ -185,6 +185,8 @@
                     }).error(function(){
                         $scope.error = true;
                     });
+
+                    return false;
                 };
 
                 $scope.next = function(){
@@ -194,6 +196,8 @@
                     }).error(function(){
                         $scope.error = true;
                     });
+
+                    return false;
                 };
 
                 $scope.goto = function(step, substep){
@@ -207,11 +211,15 @@
                     }).error(function(){
                         $scope.error = true;
                     });
+
+                    return false;
                 };
 
                 $scope.action_edit_step = function(subStep, step){
                     step = step || $scope.data.current_step.step;
                     $scope.goto(step, subStep);
+
+                    return false;
                 };
 
                 $scope.action_submit_step = function(form_id){
@@ -229,6 +237,8 @@
                         $scope.error = true;
                         $scope.handle_new_data(data);
                     });
+
+                    return false;
                 };
 
                 $scope.action_step_back = function(){
@@ -241,6 +251,8 @@
                     var subSteps = $scope.get_sub_step_names(previousStep);
                     var subStep = subSteps[subSteps.length - 1];
                     $scope.refresh(previousStep, subStep);
+
+                    return false;
                 };
 
                 $scope.handle_new_data = function(data){
