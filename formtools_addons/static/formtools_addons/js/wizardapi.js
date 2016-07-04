@@ -20,9 +20,7 @@
     };
 
     var getWizardTemplate = function(){
-        var templateUrl = static_root + wizard_template;
-        console.log('getWizardTemplate', templateUrl);
-        return templateUrl;
+        return static_root + wizard_template;
     };
 
     var parseStepName = function(stepName){
