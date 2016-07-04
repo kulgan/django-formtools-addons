@@ -4,6 +4,7 @@
 
 (function() {
     var static_root = $('body').data('staticroot');
+    var verbose = $('body').data('verbose') == '1';
     var wizard_template = $('body').data('template') || 'formtools_addons/templates/directives/wizardapi/wizard.html';
     var wizard_root = $('body').data('wizardroot') || '/wizard/';
     var substep_separator = '|';
@@ -20,7 +21,9 @@
     };
 
     var getWizardTemplate = function(){
-        return static_root + wizard_template;
+        var templateUrl = static_root + wizard_template;
+        if(verbose)console.log('getWizardTemplate', templateUrl);
+        return templateUrl;
     };
 
     var parseStepName = function(stepName){
@@ -223,7 +226,7 @@
                 $scope.action_submit_step = function(form_id){
                     var form = $('#' + form_id);
                     var form_data = form.serializeObject();
-                    console.log(form_data);
+                    if(verbose)console.log(form_data);
 
                     var fullStepName = $scope.data.current_step.fullStep;
 
@@ -255,7 +258,7 @@
 
                 $scope.handle_new_data = function(data){
                     data = transformData(data);
-                    console.log(data);
+                    if(verbose)console.log(data);
 
                     if(data.done && data.valid){
                         $scope.handle_done(data);
@@ -268,9 +271,9 @@
                 $scope.handle_done = function(data){
                     var promise = $http.post(getWizardUrl('commit'));
                     promise.success(function(data){
-                        console.log(data);
+                        if(verbose)console.log(data);
                         var next_url = data.next_url;
-                        console.log('next_url:', next_url);
+                        if(verbose)console.log('next_url:', next_url);
                         window.location = next_url;
                     });
                     promise.error(function(data){
