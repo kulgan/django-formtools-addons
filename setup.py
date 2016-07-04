@@ -13,7 +13,7 @@ from pip.req import parse_requirements
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-__version__ = '0.1.7'
+__version__ = '0.1.8'
 
 # parse_requirements() returns generator of pip.req.InstallRequirement objects
 requirements = [str(ir.req) for ir in parse_requirements(os.path.join(BASE_DIR, 'requirements.txt'), session=False)]
