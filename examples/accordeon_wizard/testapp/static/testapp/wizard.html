@@ -1,6 +1,16 @@
 <input type="checkbox" ng-model="debug">
 <pre ng-show="debug" ng-bind="data|json"></pre>
 
+<div>
+    <ul>
+        <li>Current step: {{ get_current_step() }}</li>
+        <li>Current sub_step: {{ get_current_sub_step() }}</li>
+        <li>First substep for current step: {{ get_first_sub_step_for_current_step() }}</li>
+        <li>Last substep for current step: {{ get_last_sub_step_for_current_step() }}</li>
+        <li>Is last substep for current step: {{ is_last_sub_step_for_current_step() }}</li>
+    </ul>
+</div>
+
 <div style="background: #00AAFF">
     <div ng-repeat="subStep in get_sub_step_names()">
         <h1 ng-bind="subStep"></h1>

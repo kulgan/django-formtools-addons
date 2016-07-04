@@ -341,12 +341,28 @@
                     return $scope.data.current_step.subStep;
                 };
 
-                $scope.is_last_sub_step_for_current_step = function(){
-                    var stepIndex = $scope.get_current_step_index();
-                    //var stepData = $scope.data.structure[stepIndex];
+                $scope.get_first_sub_step_for_step = function(step){
+                    var stepIndex = $scope.get_step_index(step);
                     var subSteps = $scope.data.structure[stepIndex][1];
+                    return subSteps[0];
+                };
 
-                    var lastSubStep = subSteps[subSteps.length - 1];
+                $scope.get_last_sub_step_for_step = function(step){
+                    var stepIndex = $scope.get_step_index(step);
+                    var subSteps = $scope.data.structure[stepIndex][1];
+                    return subSteps[subSteps.length - 1];
+                };
+
+                $scope.get_first_sub_step_for_current_step = function(){
+                    return $scope.get_first_sub_step_for_step($scope.data.current_step.step)
+                };
+
+                $scope.get_last_sub_step_for_current_step = function(step){
+                    return $scope.get_last_sub_step_for_step($scope.data.current_step.step)
+                };
+
+                $scope.is_last_sub_step_for_current_step = function(){
+                    var lastSubStep = $scope.get_last_sub_step_for_step($scope.data.current_step.step)
                     var currentSubStep = $scope.get_current_sub_step();
 
                     return currentSubStep == lastSubStep;
