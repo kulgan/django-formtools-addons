@@ -340,6 +340,21 @@
                     return $scope.data.current_step.subStep;
                 };
 
+                $scope.is_last_sub_step_for_current_step = function(){
+                    var stepIndex = $scope.get_current_step_index();
+                    //var stepData = $scope.data.structure[stepIndex];
+                    var subSteps = $scope.data.structure[stepIndex][1];
+
+                    var lastSubStep = subSteps[subSteps.length - 1];
+                    var currentSubStep = $scope.get_current_sub_step();
+
+                    return currentSubStep == lastSubStep;
+                };
+
+                $scope.has_more_sub_steps_for_current_step = function(){
+                    return !$scope.is_last_sub_step_for_current_step();
+                };
+
                 $scope.is_current_sub_step = function(subStep){
                     return subStep == $scope.data.current_step.subStep;
                 };
