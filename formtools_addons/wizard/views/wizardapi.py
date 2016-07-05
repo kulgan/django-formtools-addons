@@ -326,7 +326,7 @@ class WizardAPIView(NamedUrlWizardView):
             'form': self.render_form(step, form),
             'preview': self.render_preview(step, form),
             'valid': form.is_bound and form.is_valid(),
-            'data': form.cleaned_data if (form.is_bound and form.is_valid()) else {}
+            'data': form.cleaned_data if (form.is_bound and form.is_valid()) else (form_data or {})
         }
 
     def get_form_uuid(self, step):
