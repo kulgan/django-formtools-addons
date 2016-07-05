@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 import uuid
 import json
 import hashlib
+import logging
 from collections import OrderedDict
 
 import six
@@ -12,6 +13,8 @@ from django.forms import forms, formsets
 from django.http.response import JsonResponse
 from formtools.wizard.storage.exceptions import NoFileStorageConfigured
 from formtools.wizard.views import NamedUrlWizardView
+
+logger = logging.getLogger('formtools_addons.wizard.wizardapi')
 
 
 class WizardAPIView(NamedUrlWizardView):
@@ -193,8 +196,12 @@ class WizardAPIView(NamedUrlWizardView):
         # Update current step
         self.storage.current_step = step
 
+        # Store data
+        form_data = self.request.POST
+        form_files = self.request.FILES
+
         # get the form for the current step
-        form = self.get_form(data=self.request.POST, files=self.request.FILES)
+        form = self.get_form(data=form_data, files=form_files)
 
         # and try to validate
         if self.is_valid(form):
@@ -210,8 +217,13 @@ class WizardAPIView(NamedUrlWizardView):
             self.storage.current_step = goto_step
             return self.render_state(step=goto_step, done=done)
 
+        # Log errors
+        for field, errors in form.errors.items():
+            for error in errors:
+                logger.error('field error: "{0}": "{1}"'.format(field, error))
+
         # Return current step_data, since the data was invalid
-        return self.render_state(step=step, form=form, status_code=400)
+        return self.render_state(step=step, form=form, form_data=form_data, form_files=form_files, status_code=400)
 
     def get_form_prefix(self, step=None, form=None):
         # Not using prefixes
@@ -255,7 +267,7 @@ class WizardAPIView(NamedUrlWizardView):
             return '<p>STEP: %s, DATA: %s</p>' % (step, json.dumps(data, default=self.json_encoder.default))
         return None
 
-    def render_state(self, step=None, form=None, done=False, status_code=200):
+    def render_state(self, step=None, form=None, form_data=None, form_files=None, done=False, status_code=200):
         valid = self.is_valid()
 
         current_step = self.get_current_step(step=step)
@@ -272,7 +284,8 @@ class WizardAPIView(NamedUrlWizardView):
             current_form = None
             if form is not None and step == current_step:
                 current_form = form
-            data['steps'][step] = self.get_step_data(step=step, form=current_form)
+            data['steps'][step] = self.get_step_data(
+                step=step, form=current_form, form_data=form_data, form_files=form_files)
         return JsonResponse(data, status=status_code, encoder=self.json_encoder_class)
 
     def render_response(self, data=None, status_code=200):
@@ -301,10 +314,10 @@ class WizardAPIView(NamedUrlWizardView):
     def get_structure(self):
         return self.steps.all
 
-    def get_step_data(self, step, form=None, empty=False):
+    def get_step_data(self, step, form=None, empty=False, form_data=None, form_files=None):
         if form is None:
-            form_data = self.storage.get_step_data(step) if not empty else None
-            form_files = self.storage.get_step_files(step) if not empty else None
+            form_data = form_data or (self.storage.get_step_data(step) if not empty else None)
+            form_files = form_files or (self.storage.get_step_files(step) if not empty else None)
 
             form = self.get_form(step, data=form_data, files=form_files)
 
