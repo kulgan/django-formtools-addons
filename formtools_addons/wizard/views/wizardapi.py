@@ -282,10 +282,14 @@ class WizardAPIView(NamedUrlWizardView):
 
         for step in self.steps.all:
             current_form = None
+            current_form_data = None
+            current_form_files = None
             if form is not None and step == current_step:
                 current_form = form
+                current_form_data = form_data
+                current_form_files = form_files
             data['steps'][step] = self.get_step_data(
-                step=step, form=current_form, form_data=form_data, form_files=form_files)
+                step=step, form=current_form, form_data=current_form_data, form_files=current_form_files)
         return JsonResponse(data, status=status_code, encoder=self.json_encoder_class)
 
     def render_response(self, data=None, status_code=200):
