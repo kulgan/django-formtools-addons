@@ -334,10 +334,16 @@
                 };
 
                 $scope.get_current_step = function(){
+                    if(!$scope.data){
+                        return null;
+                    }
                     return $scope.data.current_step.step;
                 };
 
                 $scope.get_current_sub_step = function(){
+                    if(!$scope.data){
+                        return null;
+                    }
                     return $scope.data.current_step.subStep;
                 };
 
@@ -354,14 +360,23 @@
                 };
 
                 $scope.get_first_sub_step_for_current_step = function(){
+                    if(!$scope.data){
+                        return null;
+                    }
                     return $scope.get_first_sub_step_for_step($scope.data.current_step.step)
                 };
 
                 $scope.get_last_sub_step_for_current_step = function(step){
+                    if(!$scope.data){
+                        return null;
+                    }
                     return $scope.get_last_sub_step_for_step($scope.data.current_step.step)
                 };
 
                 $scope.is_last_sub_step_for_current_step = function(){
+                    if(!$scope.data){
+                        return false;
+                    }
                     var lastSubStep = $scope.get_last_sub_step_for_step($scope.data.current_step.step)
                     var currentSubStep = $scope.get_current_sub_step();
 
@@ -373,10 +388,16 @@
                 };
 
                 $scope.is_current_sub_step = function(subStep){
+                    if(!$scope.data){
+                        return false;
+                    }
                     return subStep == $scope.data.current_step.subStep;
                 };
 
                 $scope.get_sub_step = function(subStep){
+                    if(!$scope.data){
+                        return null;
+                    }
                     return $scope.data.steps[$scope.data.current_step.step][subStep];
                 };
 
