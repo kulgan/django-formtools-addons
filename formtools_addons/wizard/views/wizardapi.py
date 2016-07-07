@@ -232,6 +232,9 @@ class WizardAPIView(NamedUrlWizardView):
     def get_current_step(self, step=None):
         return step or self.storage.current_step
 
+    def clean_state_data(self, data):
+        return data
+
     def commit_and_render_done(self, **kwargs):
         """
         This method gets called when all forms passed. The method should also
@@ -290,6 +293,10 @@ class WizardAPIView(NamedUrlWizardView):
                 current_form_files = form_files
             data['steps'][step] = self.get_step_data(
                 step=step, form=current_form, form_data=current_form_data, form_files=current_form_files)
+
+        # Allow for manipulating state data before returning
+        data = self.clean_state_data(data)
+
         return JsonResponse(data, status=status_code, encoder=self.json_encoder_class)
 
     def render_response(self, data=None, status_code=200):
