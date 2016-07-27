@@ -8,6 +8,7 @@
         <li>First substep for current step: {{ get_first_sub_step_for_current_step() }}</li>
         <li>Last substep for current step: {{ get_last_sub_step_for_current_step() }}</li>
         <li>Is last substep for current step: {{ is_last_sub_step_for_current_step() }}</li>
+        <li>Is loading: {{ is_loading() }}</li>
     </ul>
 </div>
 
@@ -19,7 +20,7 @@
                 <button ng-click="prev()">back</button>
             </div>
             <form ng-attr-id="{{  get_sub_step(subStep).form_id }}"
-                  ng-submit="action_submit_step(get_sub_step(subStep).form_id)">
+                  ng-submit="action_submit_step(get_sub_step(subStep).form_id, 3000)">
                 <div compile="get_sub_step(subStep).form"></div>
                 <input type="submit" value="Next step"/>
             </form>
@@ -34,4 +35,7 @@
             </div>
         </div>
     </div>
+</div>
+<div ng-show="is_loading()">
+    LOADING*************************************************************************
 </div>

@@ -113,6 +113,7 @@
     };
 
     var transformData = function (data) {
+        console.log('transformData', data.structure);
         var fallback_step = data.structure[0];
         if (data.done) {
             fallback_step = data.structure[data.structure.length - 1];
@@ -170,20 +171,36 @@
     app.directive('wizard', ['$http', function($http) {
         return {
             link: function($scope, elem, attrs){
+                $scope._set_loading = function(loading){
+                    $scope.loading = loading;
+                };
+
+                $scope.is_loading = function(){
+                    return $scope.loading || false;
+                };
+
                 $scope.refresh = function(){
+                    $scope._set_loading(true);
+
                     var promise = $http.get(getWizardUrl('data'));
-                    promise.success(function(data){
+                    promise.then(function(data){
+                        $scope._set_loading(false);
                         $scope.handle_new_data(data);
-                    }).error(function(){
+                    }, function(){
+                        $scope._set_loading(false);
                         $scope.error = true;
                     });
                 };
 
                 $scope.prev = function(){
+                    $scope._set_loading(true);
+
                     var promise = $http.post(getWizardUrl('prev'));
-                    promise.success(function(data){
+                    promise.then(function(data){
+                        $scope._set_loading(false);
                         $scope.handle_new_data(data);
-                    }).error(function(){
+                    }, function(){
+                        $scope._set_loading(false);
                         $scope.error = true;
                     });
 
@@ -191,10 +208,14 @@
                 };
 
                 $scope.next = function(){
+                    $scope._set_loading(true);
+
                     var promise = $http.post(getWizardUrl('next'));
-                    promise.success(function(data){
+                    promise.then(function(data){
+                        $scope._set_loading(false);
                         $scope.handle_new_data(data);
-                    }).error(function(){
+                    }, function(){
+                        $scope._set_loading(false);
                         $scope.error = true;
                     });
 
@@ -202,14 +223,18 @@
                 };
 
                 $scope.goto = function(step, substep){
+                    $scope._set_loading(true);
+
                     var fullStep = step;
                     if(substep){
                         fullStep += substep_separator + substep;
                     }
                     var promise = $http.post(getWizardUrl('goto/' + fullStep));
-                    promise.success(function(data){
+                    promise.then(function(data){
+                        $scope._set_loading(false);
                         $scope.handle_new_data(data);
-                    }).error(function(){
+                    }, function(){
+                        $scope._set_loading(false);
                         $scope.error = true;
                     });
 
@@ -223,21 +248,34 @@
                     return false;
                 };
 
-                $scope.action_submit_step = function(form_id){
-                    var form = $('#' + form_id);
-                    var form_data = form.serializeObject();
-                    if(verbose)console.log(form_data);
+                $scope.action_submit_step = function(form_id, delay){
+                    $scope._set_loading(true);
 
-                    var fullStepName = $scope.data.current_step.fullStep;
+                    var perform_submit = function() {
+                        var form = $('#' + form_id);
+                        var form_data = form.serializeObject();
+                        if (verbose)console.log(form_data);
 
-                    var promise = $http.post(getWizardUrl(fullStepName), form_data);
-                    promise.success(function(data){
-                        $scope.handle_new_data(data);
-                    });
-                    promise.error(function(data){
-                        $scope.error = true;
-                        $scope.handle_new_data(data);
-                    });
+                        var fullStepName = $scope.data.current_step.fullStep;
+
+                        var promise = $http.post(getWizardUrl(fullStepName), form_data);
+                        promise.then(function (data) {
+                            $scope._set_loading(false);
+                            $scope.handle_new_data(data);
+                        }, function (data) {
+                            $scope._set_loading(false);
+                            $scope.error = true;
+                            $scope.handle_new_data(data);
+                        });
+                    };
+
+                    if(delay){
+                        setTimeout(perform_submit, delay);
+                        return;
+                    }
+                    else{
+                        perform_submit();
+                    }
 
                     return false;
                 };
@@ -257,7 +295,7 @@
                 };
 
                 $scope.handle_new_data = function(data){
-                    data = transformData(data);
+                    data = transformData(data.data);
                     if(verbose)console.log(data);
 
                     if(data.done && data.valid){
@@ -269,14 +307,17 @@
                 };
 
                 $scope.handle_done = function(data){
+                    $scope._set_loading(true);
+
                     var promise = $http.post(getWizardUrl('commit'));
-                    promise.success(function(data){
+                    promise.then(function(data){
+                        $scope._set_loading(false);
                         if(verbose)console.log(data);
                         var next_url = data.next_url;
                         if(verbose)console.log('next_url:', next_url);
                         window.location = next_url;
-                    });
-                    promise.error(function(data){
+                    }, function(data){
+                        $scope._set_loading(false);
                         $scope.error = true;
                         console.error(data);
                     });

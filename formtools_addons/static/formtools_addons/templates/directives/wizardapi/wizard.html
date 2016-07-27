@@ -1,7 +1,7 @@
 <input type="checkbox" ng-model="debug">
 <pre ng-show="debug" ng-bind="data|json"></pre>
 
-<div>
+<div ng-show="!is_loading()">
     <div ng-repeat="subStep in get_sub_step_names()">
         <h1 ng-bind="subStep"></h1>
         <div ng-show="is_current_sub_step(subStep)">
@@ -9,7 +9,7 @@
                 <button ng-click="prev()">back</button>
             </div>
             <form ng-attr-id="{{  get_sub_step(subStep).form_id }}"
-                  ng-submit="action_submit_step(get_sub_step(subStep).form_id)">
+                  ng-submit="action_submit_step(get_sub_step(subStep).form_id, 3000)">
                 <div compile="get_sub_step(subStep).form"></div>
                 <input type="submit" value="Next step"/>
             </form>
@@ -24,4 +24,7 @@
             </div>
         </div>
     </div>
+</div>
+<div ng-show="is_loading()">
+    LOADING*************************************************************************
 </div>
