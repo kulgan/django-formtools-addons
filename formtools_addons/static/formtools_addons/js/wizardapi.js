@@ -154,21 +154,47 @@
     }]);
 
     // http://stackoverflow.com/questions/17417607/angular-ng-bind-html-unsafe-and-directive-within-it
-    app.directive('compile', ['$compile', function ($compile){
+    app.directive('compile', ['$parse', '$compile', function ($parse, $compile){
         return {
             link: function($scope, element, attrs){
                 $scope.$watch(function($scope){
                     return $scope.$eval(attrs.compile);
                 }, function(value){
+                    console.log('compile value:', value);
                     element.html(value);
                     $compile(element.contents())($scope);
-                });
+                    if (attrs.onReady){
+                        var onReadyFn = $parse(attrs.onReady);
+                        onReadyFn($scope);
+                    }
+                }, true);
             },
             scope: true
         };
     }]);
 
-    app.directive('wizard', ['$http', function($http) {
+    app.directive('scrollToSubstep', function(){
+        return {
+            link: function($scope, elem, attrs){
+                $scope.$on('activateSubstep', function(){
+                    if ($scope.is_current_sub_step($scope.$eval(attrs.scrollToSubstep))){
+                        var flow_step_element = elem.get(0);
+                        var flow_step_offset = flow_step_element.getBoundingClientRect();
+                        var scrollPos = $(document).scrollTop();
+
+                        $('html, body').animate({
+                            scrollTop: (flow_step_offset.top+scrollPos)
+                        }, 500);
+
+                        return false;
+                    }
+                });
+            },
+            scope: false
+        };
+    });
+
+    app.directive('wizard', ['$http', '$timeout', function($http, $timeout) {
         return {
             link: function($scope, elem, attrs){
                 $scope._set_loading = function(loading){
@@ -304,6 +330,10 @@
                     }
 
                     $scope.data = data;
+
+                    $timeout(function(){
+                        $scope.$broadcast('activateSubstep');
+                    }, 1);
                 };
 
                 $scope.handle_done = function(data){
@@ -451,7 +481,9 @@
                 };
 
                 // Refresh scope
+
                 $scope.refresh();
+
             },
             templateUrl: getWizardTemplate()
         };
