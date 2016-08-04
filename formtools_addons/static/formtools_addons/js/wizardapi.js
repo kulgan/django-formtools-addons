@@ -113,7 +113,7 @@
     };
 
     var transformData = function (data) {
-        console.log('transformData', data.structure);
+        if(verbose)console.log('transformData', data.structure);
         var fallback_step = data.structure[0];
         if (data.done) {
             fallback_step = data.structure[data.structure.length - 1];
@@ -160,7 +160,7 @@
                 $scope.$watch(function($scope){
                     return $scope.$eval(attrs.compile);
                 }, function(value){
-                    console.log('compile value:', value);
+                    if(verbose)console.log('compile value:', value);
                     element.html(value);
                     $compile(element.contents())($scope);
                     if (attrs.onReady){
