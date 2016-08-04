@@ -343,7 +343,7 @@
                     promise.then(function(data){
                         $scope._set_loading(false);
                         if(verbose)console.log(data);
-                        var next_url = data.next_url;
+                        var next_url = data.data.next_url;
                         if(verbose)console.log('next_url:', next_url);
                         window.location = next_url;
                     }, function(data){
