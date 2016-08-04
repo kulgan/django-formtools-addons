@@ -11,13 +11,18 @@ import six
 from django.core.serializers.json import DjangoJSONEncoder as JsonEncoder
 from django.forms import forms, formsets
 from django.http.response import JsonResponse
+from django.shortcuts import redirect
 from formtools.wizard.storage.exceptions import NoFileStorageConfigured
 from formtools.wizard.views import NamedUrlWizardView
+
+from formtools_addons.enums import HTTP_APPLICATION_JSON
 
 logger = logging.getLogger('formtools_addons.wizard.wizardapi')
 
 
 class WizardAPIView(NamedUrlWizardView):
+    FORCE_JSON_REQUESTS = True
+
     data_step_name = None
     goto_step_name = None
     prev_step_name = None
@@ -144,12 +149,18 @@ class WizardAPIView(NamedUrlWizardView):
         """
         This renders the form or, if needed, does the http redirects.
         """
+        if self.FORCE_JSON_REQUESTS and not self.is_json_request(request):
+            return self.get_failure_redirect_view(request, *args, **kwargs)
+
         step_url = kwargs.pop('step', self.steps.current)
 
         # is the current step the "data" name/view?
         if step_url == self.data_step_name:
             done = self.is_valid()
             return self.render_state(step=self.storage.current_step, done=done)
+
+        elif step_url not in self.steps.all:
+            return JsonResponse('Not found: {0}'.format(step_url), status=404)
 
         # is the url step name not equal to the step in the storage?
         # if yes, change the step in the storage (if name exists)
@@ -168,6 +179,9 @@ class WizardAPIView(NamedUrlWizardView):
             return self.get(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
+        if self.FORCE_JSON_REQUESTS and not self.is_json_request(request):
+            return self.get_failure_redirect_view(request, *args, **kwargs)
+
         step = kwargs.pop('step', None)
         if step == self.commit_step_name:
             # Commit wizard
@@ -224,6 +238,9 @@ class WizardAPIView(NamedUrlWizardView):
 
         # Return current step_data, since the data was invalid
         return self.render_state(step=step, form=form, form_data=form_data, form_files=form_files, status_code=400)
+
+    def get_failure_redirect_view(self, request, *args, **kwargs):
+        return redirect('/')
 
     def get_form_prefix(self, step=None, form=None):
         # Not using prefixes
@@ -344,3 +361,6 @@ class WizardAPIView(NamedUrlWizardView):
         m = hashlib.md5()
         m.update(step.encode('utf-8'))
         return uuid.UUID(bytes=m.digest())
+
+    def is_json_request(self, request):
+        return HTTP_APPLICATION_JSON in request.META.get('HTTP_ACCEPT', '')

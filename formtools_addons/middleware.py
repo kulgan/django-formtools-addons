@@ -4,13 +4,15 @@ from __future__ import unicode_literals
 import json
 from django.http.request import QueryDict
 
+from .enums import HTTP_APPLICATION_JSON
+
 
 class JSONMiddleware(object):
     """
     Process application/json requests data from GET and POST requests.
     """
     def process_request(self, request):
-        if 'application/json' in request.META.get('CONTENT_TYPE', ''):
+        if HTTP_APPLICATION_JSON in request.META.get('CONTENT_TYPE', ''):
             # load the json data
             data = json.loads(request.body)
             # for consistency sake, we want to return
