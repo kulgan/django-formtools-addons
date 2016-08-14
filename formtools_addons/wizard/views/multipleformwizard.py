@@ -204,6 +204,24 @@ class MultipleFormWizardView(BaseWizardView):
         done_response = self.done(form_list=form_list, form_dict=result_forms_dict, **kwargs)
         self.storage.reset()
         return done_response
+    
+    def get_form_prefix(self, step=None, form=None):
+        """
+        Returns the prefix which will be used when calling the actual form for
+        the given step. `step` contains the step-name, `form` the form which
+        will be called with the returned prefix.
+
+        If no step is given, the form_prefix will determine the current step
+        automatically.
+
+        Also appends form key to the form prefix, so django can render different management_forms
+        """
+        # appends form key to form prefix
+        if isinstance(form, str):
+            step = step + "-" + form
+        else:
+            step = super(MultipleFormWizardView, self).get_form_prefix(step, form)
+        return str(step)
 
     def get(self, request, *args, **kwargs):
         """
